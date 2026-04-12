@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<!-- saved from url=(0048)https://app.onecompiler.com/44k5krgrr_44k5p647e/ -->
+<html lang="vi"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <title>Dành cho Thiên Thần</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
+        }
+
+        #canvas {
+            display: block;
+        }
+
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        h1 {
+            color: #ff69b4;
+            font-size: 3.5rem;
+            text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff1493;
+            animation: glow 2s ease-in-out infinite alternate;
+            margin: 0;
+        }
+
+        @keyframes glow {
+            from { opacity: 0.8; transform: scale(1); }
+            to { opacity: 1; transform: scale(1.05); }
+        }
+
+        p {
+            color: #fff;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body onclick="burstHearts(event)">
+
+    <div class="content">
+        <h1>EM LÀ MỘT BÔNG HOA XINH ĐẸP</h1>
+        <p>Em chạm vào màn hình để cảm nhận tình yêu</p>
+    </div>
+
+    <canvas id="canvas" width="470" height="727"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        let fireworks = [];
+
+        // Lớp Pháo hoa/Trái tim
+        class Particle {
+            constructor(x, y, color, speed, type) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.type = type; // 'firework' hoặc 'heart'
+                this.size = type === 'heart' ? Math.random() * 5 + 2 : Math.random() * 3 + 1;
+                this.speedX = (Math.random() - 0.5) * speed;
+                this.speedY = (Math.random() - 0.5) * speed;
+                this.gravity = 0.05;
+                this.opacity = 1;
+                this.shrink = 0.96;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+                if (this.type === 'heart') {
+                    // Vẽ hình trái tim
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.bezierCurveTo(this.x - this.size, this.y - this.size, this.x - this.size * 2, this.y + this.size/2, this.x, this.y + this.size * 2);
+                    ctx.bezierCurveTo(this.x + this.size * 2, this.y + this.size/2, this.x + this.size, this.y - this.size, this.x, this.y);
+                    ctx.fill();
+                } else {
+                    // Vẽ pháo hoa tròn
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            update() {
+                this.speedY += this.gravity;
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.opacity -= 0.01;
+                this.size *= this.shrink;
+            }
+        }
+
+        function createFirework() {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * (canvas.height / 2);
+            const color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+            for (let i = 0; i < 50; i++) {
+                particles.push(new Particle(x, y, color, 8, 'firework'));
+            }
+        }
+
+        function createHeartLoop() {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const color = "#ff1493";
+            for (let i = 0; i < 15; i++) {
+                particles.push(new Particle(x, y, color, 4, 'heart'));
+            }
+        }
+
+        // Hiệu ứng khi chạm/click - Bắn tim full màn hình
+        function burstHearts(e) {
+            const mouseX = e.clientX || e.touches[0].clientX;
+            const mouseY = e.clientY || e.touches[0].clientY;
+            
+            // Bắn nhiều tim tại điểm chạm
+            for (let i = 0; i < 40; i++) {
+                particles.push(new Particle(mouseX, mouseY, "#ff69b4", 15, 'heart'));
+                particles.push(new Particle(mouseX, mouseY, "#fff", 12, 'firework'));
+            }
+            
+            // Bắn thêm các cụm tim ngẫu nhiên khắp màn hình
+            for (let j = 0; j < 5; j++){
+                setTimeout(() => {
+                    const rx = Math.random() * canvas.width;
+                    const ry = Math.random() * canvas.height;
+                    for (let k = 0; k < 20; k++) {
+                        particles.push(new Particle(rx, ry, "#ff1493", 10, 'heart'));
+                    }
+                }, j * 100);
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; // Tạo hiệu ứng đuôi mờ
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Tự động tạo pháo hoa và tim liên tục
+            if (Math.random() < 0.05) createFirework();
+            if (Math.random() < 0.1) createHeartLoop();
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].opacity <= 0 || particles[i].size <= 0.2) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        animate();
+    </script>
+<script defer="" src="./v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;b6c6421bde3c48e5ac7f9b8dbecc7bd7&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+
+
+</body></html>
